@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:social_photo_album/albums_page.dart';
 import 'firebase_options.dart';
 import 'auth_service.dart';
 import 'storage_service.dart';
@@ -11,8 +13,16 @@ import 'home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const MyApp());
+  await EasyLocalization.ensureInitialized();
+
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('uk'), Locale('en')],
+      path: 'assets/translations', // шлях до json-файлів
+      fallbackLocale: const Locale('uk'),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -20,11 +30,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.deepPurple,
-      ),
-      home: const AuthWrapper(),
+      title: 'Social Photo Album',
+      locale: context.locale,
+      supportedLocales: context.supportedLocales,
+      localizationsDelegates: context.localizationDelegates,
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      home: const AlbumsPage(),
     );
   }
 }
@@ -45,9 +57,7 @@ class AuthWrapper extends StatelessWidget {
             return HomePage(user: user);
           }
         }
-        return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       },
     );
   }

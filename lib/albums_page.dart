@@ -315,30 +315,29 @@ class _AlbumsPageState extends State<AlbumsPage> {
   }
 
   /// Відкриває bottom sheet з чатом коментарів для даного фото
-  Future<void> _showCommentsSheet(String photoId) async {
+  Future<void> _showCommentsSheet(String photoId, [String? albumId]) async {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (ctx) {
         String newComment = '';
-        // Обираємо, з якої колекції читати/писати коментарі
-        final commentsCol = (_selectedAlbumId != null)
-            // Якщо альбом відкритий — колекція comments в документі фото в альбомі
+        // обчислюємо куди писати/читати: у альбомі чи в галереї
+        final commentsCol = (albumId != null)
             ? _db
                   .collection('users')
                   .doc(_userId)
                   .collection('albums')
-                  .doc(_selectedAlbumId!)
+                  .doc(albumId)
                   .collection('photos')
                   .doc(photoId)
                   .collection('comments')
-            // Інакше — колекція comments в документі фото в головній галереї
             : _db
                   .collection('users')
                   .doc(_userId)
                   .collection('photos')
                   .doc(photoId)
                   .collection('comments');
+        print('🛠 comments go to: ${commentsCol.path}');
 
         return Padding(
           // Щоб підняти sheet вище клавіатури
@@ -514,17 +513,11 @@ class _AlbumsPageState extends State<AlbumsPage> {
                         icon: const Icon(Icons.send),
                         onPressed: () async {
                           if (newComment.trim().isEmpty) return;
-                          await _db
-                              .collection('users')
-                              .doc(_userId)
-                              .collection('photos')
-                              .doc(photoId)
-                              .collection('comments')
-                              .add({
-                                'text': newComment.trim(),
-                                'createdAt': FieldValue.serverTimestamp(),
-                                'authorId': _userId,
-                              });
+                          await commentsCol.add({
+                            'text': newComment.trim(),
+                            'createdAt': FieldValue.serverTimestamp(),
+                            'authorId': _userId,
+                          });
                           newComment = '';
                           // Щоб очистити поле, закрийте і заново відкрийте sheet
                           Navigator.pop(ctx);
@@ -763,7 +756,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
                                   }
                                 },
                                 onDelete: () => _confirmDeletePhoto(doc.id),
-                                onComment: () => _showCommentsSheet(doc.id),
+                                onComment: () => _showCommentsSheet(doc.id, null),
                                 fetchAlbums: _fetchAlbumList,
                               ),
                             );
@@ -794,7 +787,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
                                 }
                               },
                               onDelete: () => _confirmDeletePhoto(doc.id),
-                              onComment: () => _showCommentsSheet(doc.id),
+                              onComment: () => _showCommentsSheet(doc.id, null),
                               fetchAlbums: _fetchAlbumList,
                             ),
                           );

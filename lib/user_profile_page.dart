@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'storage_service.dart';
 import 'auth_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class UserProfilePage extends StatefulWidget {
   final User user;
@@ -23,8 +24,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     if (picked == null) return;
     final bytes = await picked.readAsBytes();
     final url = await _storageService.uploadImage(bytes, widget.user.uid);
-    await FirebaseAuth.instance.currentUser!
-        .updatePhotoURL(url);
+    await FirebaseAuth.instance.currentUser!.updatePhotoURL(url);
     await FirebaseAuth.instance.currentUser!.reload();
     setState(() => _imageBytes = bytes);
   }
@@ -35,8 +35,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final avatar = _imageBytes != null
         ? Image.memory(_imageBytes!, width: 150, height: 150, fit: BoxFit.cover)
         : (photoUrl != null
-            ? CircleAvatar(backgroundImage: NetworkImage(photoUrl), radius: 50)
-            : const Icon(Icons.account_circle, size: 100));
+              ? CircleAvatar(
+                  backgroundImage: NetworkImage(photoUrl),
+                  radius: 50,
+                )
+              : const Icon(Icons.account_circle, size: 100));
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -51,6 +54,27 @@ class _UserProfilePageState extends State<UserProfilePage> {
             onPressed: _pickAndUploadImage,
             child: const Text('Змінити фото'),
           ),
+          ListTile(
+            title: Text('language'.tr()),
+            trailing: DropdownButton<Locale>(
+              value: context.locale,
+              items: [
+                DropdownMenuItem(
+                  value: const Locale('uk'),
+                  child: Text('ukrainian'.tr()),
+                ),
+                DropdownMenuItem(
+                  value: const Locale('en'),
+                  child: Text('english'.tr()),
+                ),
+              ],
+              onChanged: (Locale? locale) {
+                if (locale != null) {
+                  context.setLocale(locale);
+                }
+              },
+            ),
+          ),
           const SizedBox(height: 20),
           ElevatedButton.icon(
             icon: const Icon(Icons.logout),
@@ -58,9 +82,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             onPressed: () async {
               await AuthService().signOut();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
           ),
         ],
       ),
