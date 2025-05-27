@@ -1,0 +1,64 @@
+/// lib/widgets/album_tile.dart
+import 'package:flutter/material.dart';
+
+class AlbumTile extends StatefulWidget {
+  final String title;
+  final VoidCallback onRename;
+  final VoidCallback onDelete;
+  final Widget Function(Widget child) onReorderHandle;
+
+  const AlbumTile({
+    Key? key,
+    required this.title,
+    required this.onRename,
+    required this.onDelete,
+    required this.onReorderHandle,
+  }) : super(key: key);
+
+  @override
+  State<AlbumTile> createState() => _AlbumTileState();
+}
+
+class _AlbumTileState extends State<AlbumTile> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit:  (_) => setState(() => _hovered = false),
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: _hovered ? 6 : 2,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              if (_hovered)
+                widget.onReorderHandle(const Icon(Icons.drag_handle, color: Colors.grey))
+              else
+                const SizedBox(width: 24),
+              const SizedBox(width: 12),
+              Expanded(child: Text(widget.title, overflow: TextOverflow.ellipsis)),
+              PopupMenuButton<String>(
+                icon: Icon(
+                  Icons.more_vert,
+                  color: _hovered ? Colors.grey : Colors.transparent,
+                ),
+                onSelected: (v) {
+                  if (v == 'rename') widget.onRename();
+                  if (v == 'delete') widget.onDelete();
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'rename', child: Text('Перейменувати')),
+                  PopupMenuItem(value: 'delete', child: Text('Видалити')),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

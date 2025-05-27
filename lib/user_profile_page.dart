@@ -1,0 +1,69 @@
+// lib/user_profile_page.dart
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'storage_service.dart';
+import 'auth_service.dart';
+
+class UserProfilePage extends StatefulWidget {
+  final User user;
+  const UserProfilePage({Key? key, required this.user}) : super(key: key);
+
+  @override
+  State<UserProfilePage> createState() => _UserProfilePageState();
+}
+
+class _UserProfilePageState extends State<UserProfilePage> {
+  final _storageService = StorageService();
+  Uint8List? _imageBytes;
+
+  Future<void> _pickAndUploadImage() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    final url = await _storageService.uploadImage(bytes, widget.user.uid);
+    await FirebaseAuth.instance.currentUser!
+        .updatePhotoURL(url);
+    await FirebaseAuth.instance.currentUser!.reload();
+    setState(() => _imageBytes = bytes);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
+    final avatar = _imageBytes != null
+        ? Image.memory(_imageBytes!, width: 150, height: 150, fit: BoxFit.cover)
+        : (photoUrl != null
+            ? CircleAvatar(backgroundImage: NetworkImage(photoUrl), radius: 50)
+            : const Icon(Icons.account_circle, size: 100));
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          avatar,
+          const SizedBox(height: 20),
+          Text('Email: ${widget.user.email ?? 'не вказано'}'),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _pickAndUploadImage,
+            child: const Text('Змінити фото'),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.logout),
+            label: const Text('Вийти'),
+            onPressed: () async {
+              await AuthService().signOut();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

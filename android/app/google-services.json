@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "645034820770",
+    "project_id": "social-photo-album",
+    "storage_bucket": "social-photo-album.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:645034820770:android:2a09613b5482b40d8e43fb",
+        "android_client_info": {
+          "package_name": "com.example.social_photo_album"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "645034820770-08i24pd0cragdlnht64nrlpahdujck32.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtCpeqNA0Xo3S3a0OFU-7yRtIq3BXBdQI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "645034820770-08i24pd0cragdlnht64nrlpahdujck32.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "645034820770-eb6bf3qoopkpte931fnp427tqipvgohe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.socialPhotoAlbum"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

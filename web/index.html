@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <meta charset="UTF-8" />
+    <meta name="google-signin-client_id" content="645034820770-08i24pd0cragdlnht64nrlpahdujck32.apps.googleusercontent.com">
+    <title>Social Photo Album</title>
+    <base href="/" />
+    <meta name="description" content="A new Flutter project." />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="main.dart.js" type="application/javascript"></script>
+  </head>
+  <body>
+    <script>
+      // For Google Sign-In
+      window.onload = function () {
+        gapi.load('auth2', function() {
+          gapi.auth2.init();
+        });
+      };
+    </script>
+    <noscript>Please enable JavaScript to run this app.</noscript>
+    <flt-glass-pane></flt-glass-pane>
+  </body>
+</html>
