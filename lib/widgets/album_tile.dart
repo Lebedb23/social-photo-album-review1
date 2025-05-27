@@ -1,5 +1,5 @@
-/// lib/widgets/album_tile.dart
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AlbumTile extends StatefulWidget {
   final String title;
@@ -26,7 +26,7 @@ class _AlbumTileState extends State<AlbumTile> {
   Widget build(BuildContext context) {
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
-      onExit:  (_) => setState(() => _hovered = false),
+      onExit: (_) => setState(() => _hovered = false),
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -50,9 +50,9 @@ class _AlbumTileState extends State<AlbumTile> {
                   if (v == 'rename') widget.onRename();
                   if (v == 'delete') widget.onDelete();
                 },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'rename', child: Text('Перейменувати')),
-                  PopupMenuItem(value: 'delete', child: Text('Видалити')),
+                itemBuilder: (_) => [
+                  PopupMenuItem(value: 'rename', child: Text('rename'.tr())),
+                  PopupMenuItem(value: 'delete', child: Text('delete'.tr())),
                 ],
               ),
             ],

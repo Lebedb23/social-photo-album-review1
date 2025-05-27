@@ -1,7 +1,6 @@
-// lib/album_service.dart
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AlbumService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -68,15 +67,15 @@ class AlbumService {
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Новий альбом'),
+        title: Text('new_album'.tr()),
         content: TextField(
-          decoration: const InputDecoration(labelText: 'Назва альбому'),
+          decoration: InputDecoration(labelText: 'album_name'.tr()),
           onChanged: (v) => title = v,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Скасувати'),
+            child: Text('cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () {
@@ -85,7 +84,7 @@ class AlbumService {
               }
               Navigator.of(ctx).pop();
             },
-            child: const Text('Створити'),
+            child: Text('create'.tr()),
           ),
         ],
       ),

@@ -13,12 +13,13 @@ import 'home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await EasyLocalization.ensureInitialized();
 
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('uk'), Locale('en')],
-      path: 'assets/translations', // шлях до json-файлів
+      path: 'assets/translations',
       fallbackLocale: const Locale('uk'),
       child: const MyApp(),
     ),
@@ -36,7 +37,7 @@ class MyApp extends StatelessWidget {
       localizationsDelegates: context.localizationDelegates,
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
-      home: const AlbumsPage(),
+      home: const AuthWrapper(),
     );
   }
 }
@@ -65,20 +66,21 @@ class AuthWrapper extends StatelessWidget {
 
 class SignInPage extends StatelessWidget {
   const SignInPage({super.key});
+
   @override
-  Widget build(BuildContext c) {
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: ElevatedButton(
           onPressed: () async {
             final user = await AuthService().signInWithGoogle();
             if (user == null) {
-              ScaffoldMessenger.of(
-                c,
-              ).showSnackBar(const SnackBar(content: Text('Вхід скасовано')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('auth.sign_in_cancelled'.tr())),
+              );
             }
           },
-          child: const Text('Увійти через Google'),
+          child: Text('auth.sign_in_google'.tr()),
         ),
       ),
     );
@@ -125,7 +127,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Привіт, ${widget.user.displayName ?? 'користувач'}'),
+        title: Text(
+          '${'profile.greeting'.tr()}, ${widget.user.displayName ?? 'profile.user'.tr()}',
+        ),
+
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -139,10 +144,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
           children: [
             avatar,
             const SizedBox(height: 20),
-            Text('Email: ${widget.user.email ?? 'не вказано'}'),
+            Text(
+              '${'profile.email'.tr()}: ${widget.user.email ?? 'profile.not_specified'.tr()}',
+            ),
+
             ElevatedButton(
               onPressed: _pickAndUploadImage,
-              child: const Text('Завантажити нове фото'),
+              child: Text('profile.upload_photo'.tr()),
             ),
           ],
         ),

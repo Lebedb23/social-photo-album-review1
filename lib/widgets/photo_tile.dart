@@ -1,6 +1,5 @@
-// lib/widgets/photo_tile.dart
-
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../models/photo_data.dart';
 
 /// Простий віджет фото з постійним меню знизу та подвійним натисканням для перегляду
@@ -68,7 +67,7 @@ class PhotoTile extends StatelessWidget {
                     final selected = await showDialog<String>(
                       context: context,
                       builder: (ctx) => SimpleDialog(
-                        title: const Text('Перемістити до'),
+                        title: Text('move_to'.tr()),
                         children: albums.map((a) {
                           return SimpleDialogOption(
                             child: Text(a['title']!),

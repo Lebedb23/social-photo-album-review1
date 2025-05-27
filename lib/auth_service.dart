@@ -1,6 +1,7 @@
 // lib/auth_service.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthService {
   // Ваш FirebaseAuth
@@ -8,31 +9,31 @@ class AuthService {
 
   // GoogleSignIn з явним clientId для web
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: '645034820770-08i24pd0cragdlnht64nrlpahdujck32.apps.googleusercontent.com',
-    scopes: [
-      'email',
-      'profile',
-    ],
+    clientId:
+        '645034820770-08i24pd0cragdlnht64nrlpahdujck32.apps.googleusercontent.com',
+    scopes: ['email', 'profile'],
   );
 
-  /// Вхід через Google
   Future<User?> signInWithGoogle() async {
-    // 1) Popup для вибору акаунта
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) return null; // користувач натиснув “Cancel”
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return null;
 
-    // 2) Отримуємо токени
-    final googleAuth = await googleUser.authentication;
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
 
-    // 3) Формуємо credential для Firebase
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-
-    // 4) Авторизуємося у Firebase
-    final userCred = await _auth.signInWithCredential(credential);
-    return userCred.user;
+      final userCred = await _auth.signInWithCredential(credential);
+      return userCred.user;
+    } on FirebaseAuthException catch (e, stack) {
+      debugPrint('FirebaseAuthException: $e\n$stack');
+      rethrow;
+    } catch (e, stack) {
+      debugPrint('Unexpected error: $e\n$stack');
+      rethrow;
+    }
   }
 
   /// Вихід

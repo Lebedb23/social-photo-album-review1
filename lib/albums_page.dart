@@ -5,6 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/photo_data.dart';
 import '../widgets/album_tile.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../widgets/photo_tile.dart';
 
 class AlbumsPage extends StatefulWidget {
@@ -36,19 +37,19 @@ class _AlbumsPageState extends State<AlbumsPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Новий альбом'),
+        title: Text('new_album'.tr()),
         content: TextField(
-          decoration: const InputDecoration(labelText: 'Назва альбому'),
+          decoration: InputDecoration(labelText: 'album_name'.tr()),
           onChanged: (v) => title = v,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Скасувати'),
+            child: Text('cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Створити'),
+            child: Text('create'.tr()),
           ),
         ],
       ),
@@ -68,20 +69,20 @@ class _AlbumsPageState extends State<AlbumsPage> {
       builder: (ctx) {
         final controller = TextEditingController(text: current);
         return AlertDialog(
-          title: const Text('Перейменувати альбом'),
+          title: Text('rename_album'.tr()),
           content: TextField(
             controller: controller,
-            decoration: const InputDecoration(labelText: 'Нова назва'),
+            decoration: InputDecoration(labelText: 'new_title'.tr()),
             onChanged: (v) => name = v,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Скасувати'),
+              child: Text('cancel'.tr()),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Зберегти'),
+              child: Text('save'.tr()),
             ),
           ],
         );
@@ -100,15 +101,15 @@ class _AlbumsPageState extends State<AlbumsPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Видалити альбом?'),
+        title: Text('delete_album_question'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Ні'),
+            child: Text('no'.tr()),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Так'),
+            child: Text('yes'.tr()),
           ),
         ],
       ),
@@ -286,16 +287,16 @@ class _AlbumsPageState extends State<AlbumsPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Видалити фото?'),
-        content: const Text('Ви дійсно хочете видалити це фото?'),
+        title: Text('delete_photo_title'.tr()),
+        content: Text('delete_photo_confirm'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Ні'),
+            child: Text('no'.tr()),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Так'),
+            child: Text('yes'.tr()),
           ),
         ],
       ),
@@ -352,8 +353,11 @@ class _AlbumsPageState extends State<AlbumsPage> {
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: Text(
-                    'Коментарі',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    'comments_title'.tr(),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const Divider(height: 1),
@@ -368,7 +372,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
                       }
                       final docs = snap.data!.docs;
                       if (docs.isEmpty) {
-                        return const Center(child: Text('Немає коментарів'));
+                        return Center(child: Text('no_comments'.tr()));
                       }
                       return ListView.builder(
                         itemCount: docs.length,
@@ -415,7 +419,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
                                     builder: (dctx) {
                                       var tmp = data['text'] as String;
                                       return AlertDialog(
-                                        title: Text('Редагувати коментар'),
+                                        title: Text('edit_comment'.tr()),
                                         content: TextField(
                                           controller: TextEditingController(
                                             text: tmp,
@@ -426,12 +430,12 @@ class _AlbumsPageState extends State<AlbumsPage> {
                                           TextButton(
                                             onPressed: () =>
                                                 Navigator.pop(dctx),
-                                            child: Text('Скасувати'),
+                                            child: Text('cancel'.tr()),
                                           ),
                                           ElevatedButton(
                                             onPressed: () =>
                                                 Navigator.pop(dctx, tmp),
-                                            child: Text('Зберегти'),
+                                            child: Text('save'.tr()),
                                           ),
                                         ],
                                       );
@@ -448,17 +452,17 @@ class _AlbumsPageState extends State<AlbumsPage> {
                                   final ok = await showDialog<bool>(
                                     context: ctx,
                                     builder: (dctx) => AlertDialog(
-                                      title: Text('Видалити коментар?'),
+                                      title: Text('delete_comment_title'.tr()),
                                       actions: [
                                         TextButton(
                                           onPressed: () =>
                                               Navigator.pop(dctx, false),
-                                          child: Text('Ні'),
+                                          child: Text('no'.tr()),
                                         ),
                                         ElevatedButton(
                                           onPressed: () =>
                                               Navigator.pop(dctx, true),
-                                          child: Text('Так'),
+                                          child: Text('yes'.tr()),
                                         ),
                                       ],
                                     ),
@@ -471,11 +475,11 @@ class _AlbumsPageState extends State<AlbumsPage> {
                               itemBuilder: (_) => [
                                 PopupMenuItem(
                                   value: 'edit',
-                                  child: Text('Редагувати'),
+                                  child: Text('edit'.tr()),
                                 ),
                                 PopupMenuItem(
                                   value: 'delete',
-                                  child: Text('Видалити'),
+                                  child: Text('delete'.tr()),
                                 ),
                               ],
                             ),
@@ -498,11 +502,11 @@ class _AlbumsPageState extends State<AlbumsPage> {
                       Expanded(
                         child: TextField(
                           onChanged: (v) => newComment = v,
-                          decoration: const InputDecoration(
-                            hintText: 'Введіть коментар…',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            hintText: 'comment_input_hint'.tr(),
+                            border: const OutlineInputBorder(),
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
+                            contentPadding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 8,
                             ),
@@ -543,10 +547,17 @@ class _AlbumsPageState extends State<AlbumsPage> {
         .orderBy('order')
         .get()
         .then(
-          (snap) => snap.docs
-              .map((d) => {'id': d.id, 'title': d.data()['title'] as String})
-              .toList(),
+          (snap) => snap.docs.map((d) {
+            final rawTitle = d.data()['title'];
+            final title = rawTitle is String
+                ? rawTitle
+                : (rawTitle[context.locale.languageCode] ??
+                          rawTitle.values.first)
+                      as String;
+            return {'id': d.id, 'title': title};
+          }).toList(),
         );
+
     // вставляємо першим елементом “Галерея”
     list.insert(0, {'id': 'gallery', 'title': 'Галерея'});
     return list;
@@ -605,7 +616,12 @@ class _AlbumsPageState extends State<AlbumsPage> {
                         onReorder: (o, n) => _reorderAlbums(o, n, docs),
                         itemBuilder: (ctx, i) {
                           final album = docs[i];
-                          final title = album.data()['title'] as String? ?? '';
+                          final rawTitle = album.data()['title'];
+                          final title = rawTitle is String
+                              ? rawTitle
+                              : (rawTitle[context.locale.languageCode] ??
+                                        rawTitle.values.first)
+                                    as String;
                           return DragTarget<PhotoData>(
                             key: ValueKey(album.id),
                             onWillAccept: (_) => true,
@@ -756,7 +772,8 @@ class _AlbumsPageState extends State<AlbumsPage> {
                                   }
                                 },
                                 onDelete: () => _confirmDeletePhoto(doc.id),
-                                onComment: () => _showCommentsSheet(doc.id, null),
+                                onComment: () =>
+                                    _showCommentsSheet(doc.id, null),
                                 fetchAlbums: _fetchAlbumList,
                               ),
                             );

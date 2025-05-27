@@ -48,11 +48,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
           const SizedBox(height: 20),
           avatar,
           const SizedBox(height: 20),
-          Text('Email: ${widget.user.email ?? 'не вказано'}'),
+          Text('email'.tr(args: [widget.user.email ?? tr('not_specified')])),
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: _pickAndUploadImage,
-            child: const Text('Змінити фото'),
+            child: Text('change_photo'.tr()),
           ),
           ListTile(
             title: Text('language'.tr()),
@@ -78,7 +78,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           const SizedBox(height: 20),
           ElevatedButton.icon(
             icon: const Icon(Icons.logout),
-            label: const Text('Вийти'),
+            label: Text('logout'.tr()),
             onPressed: () async {
               await AuthService().signOut();
             },

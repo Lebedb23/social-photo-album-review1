@@ -7,5 +7,62 @@
   "send": "Send",
   "language": "Language",
   "english": "English",
-  "ukrainian": "Ukrainian"
+  "ukrainian": "Ukrainian", 
+   "rename": "Rename",
+  "delete": "Delete", 
+   "move_to": "Move to",
+  "new_album": "New album",
+  "album_name": "Album name",
+  "cancel": "Cancel",
+  "create": "Create",
+   "new_album": "New Album",
+  "album_name": "Album Name",
+  "cancel": "Cancel",
+  "create": "Create",
+  "rename_album": "Rename Album",
+  "new_title": "New Title",
+  "save": "Save",
+  "delete_album_question": "Delete album?",
+  "yes": "Yes",
+  "no": "No",
+  "delete_photo_title": "Delete photo?",
+"delete_photo_confirm": "Are you sure you want to delete this photo?",
+"yes": "Yes",
+"no": "No",
+ "comments_title": "Comments",
+  "no_comments": "No comments",
+  "edit_comment": "Edit comment",
+  "delete_comment_title": "Delete comment?",
+  "cancel": "Cancel",
+  "save": "Save",
+  "yes": "Yes",
+  "no": "No",
+  "edit": "Edit",
+  "delete": "Delete",
+  "comment_input_hint": "Enter a comment…",
+  "gallery": "Gallery",
+  "profile": "Profile",
+    "auth": {
+    "sign_in_google": "Sign in with Google",
+    "sign_in_cancelled": "Sign-in cancelled"
+  },
+  "profile": {
+    "greeting": "Hello",
+    "user": "user",
+    "email": "Email",
+    "not_specified": "not specified",
+    "upload_photo": "Upload new photo"
+  },
+    "email": "Email: {}",
+  "not_specified": "not specified",
+  "change_photo": "Change photo",
+  "language": "Language",
+  "ukrainian": "Ukrainian",
+  "english": "English",
+  "logout": "Sign out",
+   "auth.sign_in_error": "Something went wrong during sign in"
+
 }
+
+  
+

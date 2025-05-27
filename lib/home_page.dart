@@ -1,7 +1,6 @@
-// lib/home_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import 'albums_page.dart';
 import 'user_profile_page.dart';
@@ -15,34 +14,33 @@ class HomePage extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        // Основний контент — перегортання між сторінками
+        // Main content — switch between pages
         body: TabBarView(
-          physics: const NeverScrollableScrollPhysics(), // щоб не свайпалось
+          physics: const NeverScrollableScrollPhysics(), // disable swipe
           children: [
             const AlbumsPage(),
             UserProfilePage(user: user),
           ],
         ),
 
-        // Нижня панель із вкладками
+        // Bottom tab bar
         bottomNavigationBar: Material(
           color: Colors.white,
           elevation: 8,
           child: TabBar(
-            // Вирівнюємо таби по центру іконками та підписами
             indicatorColor: Theme.of(context).primaryColor,
             indicatorWeight: 3,
             labelColor: Colors.black,
             unselectedLabelColor: Colors.grey,
             labelPadding: const EdgeInsets.only(top: 4),
-            tabs: const [
+            tabs: [
               Tab(
-                icon: Icon(Icons.photo_album, size: 24),
-                text: 'Галерея',
+                icon: const Icon(Icons.photo_album, size: 24),
+                text: 'gallery'.tr(),
               ),
               Tab(
-                icon: Icon(Icons.person_outline, size: 24),
-                text: 'Профіль',
+                icon: const Icon(Icons.person_outline, size: 24),
+                text: 'profile'.tr(),
               ),
             ],
           ),
