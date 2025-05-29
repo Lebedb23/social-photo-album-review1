@@ -559,7 +559,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
         );
 
     // вставляємо першим елементом “Галерея”
-    list.insert(0, {'id': 'gallery', 'title': 'Галерея'});
+    list.insert(0, {'id': 'gallery', 'title': tr('gallery_label')});
     return list;
   }
 
@@ -577,10 +577,10 @@ class _AlbumsPageState extends State<AlbumsPage> {
               children: [
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Мої альбоми',
-                        style: TextStyle(
+                        'my_albums'.tr(),
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -701,7 +701,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
                         // Кнопка Галерея там, де раніше була Камера
                         TextButton.icon(
                           icon: const Icon(Icons.photo_library),
-                          label: const Text('Галерея'),
+                          label: Text('gallery_label'.tr()),
                           onPressed: () => _uploadPhoto(ImageSource.gallery),
                         ),
                       ],

@@ -36,11 +36,11 @@ class HomePage extends StatelessWidget {
             tabs: [
               Tab(
                 icon: const Icon(Icons.photo_album, size: 24),
-                text: 'gallery'.tr(),
+                text: 'gallery_label'.tr(),
               ),
               Tab(
                 icon: const Icon(Icons.person_outline, size: 24),
-                text: 'profile'.tr(),
+                text: 'profile_label'.tr(),
               ),
             ],
           ),

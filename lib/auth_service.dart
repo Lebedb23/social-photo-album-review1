@@ -9,10 +9,9 @@ class AuthService {
 
   // GoogleSignIn з явним clientId для web
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId:
-        '645034820770-08i24pd0cragdlnht64nrlpahdujck32.apps.googleusercontent.com',
-    scopes: ['email', 'profile'],
-  );
+  scopes: ['email', 'profile'],
+);
+
 
   Future<User?> signInWithGoogle() async {
     try {
