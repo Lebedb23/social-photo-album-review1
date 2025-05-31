@@ -3,9 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class AlbumService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
 
-  /// 1) Стрім усіх альбомів (слухає оновлення в Firestore)
+  // Конструктор, який приймає опціональний екземпляр Firestore
+  AlbumService({FirebaseFirestore? firestore})
+      : _db = firestore ?? FirebaseFirestore.instance;
+
+  /// 1) Стрім усіх альбомів
   Stream<QuerySnapshot<Map<String, dynamic>>> getAlbumsStream(String userId) {
     return _db
         .collection('users')

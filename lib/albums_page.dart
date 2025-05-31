@@ -565,259 +565,232 @@ class _AlbumsPageState extends State<AlbumsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Розраховуємо, чи мобільний екран (<600px), і кількість стовпців у GridView
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final gridCount = isMobile ? 2 : 4;
     final isAlbumOpen = _selectedAlbumId != null;
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Flexible(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'my_albums'.tr(),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: _addAlbum,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                    stream: _db
-                        .collection('users')
-                        .doc(_userId)
-                        .collection('albums')
-                        .orderBy('order')
-                        .snapshots(),
-                    builder: (ctx, snap) {
-                      if (snap.connectionState == ConnectionState.waiting)
-                        return const Center(child: CircularProgressIndicator());
-                      if (snap.hasError)
-                        return Center(child: Text('Error: ${snap.error}'));
-                      final docs = snap.data!.docs;
-                      if (docs.isEmpty)
-                        return const Center(child: Text('Немає альбомів'));
-                      return ReorderableListView.builder(
-                        itemCount: docs.length,
-                        buildDefaultDragHandles: false,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        onReorder: (o, n) => _reorderAlbums(o, n, docs),
-                        itemBuilder: (ctx, i) {
-                          final album = docs[i];
-                          final rawTitle = album.data()['title'];
-                          final title = rawTitle is String
-                              ? rawTitle
-                              : (rawTitle[context.locale.languageCode] ??
-                                        rawTitle.values.first)
-                                    as String;
-                          return DragTarget<PhotoData>(
-                            key: ValueKey(album.id),
-                            onWillAccept: (_) => true,
-                            onAccept: (photo) =>
-                                _movePhotoToAlbum(photo, album.id),
-                            builder: (context, candidate, rejected) {
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedAlbumId = album.id;
-                                    _selectedAlbumTitle = title;
-                                  });
-                                },
-                                child: AlbumTile(
-                                  key: ValueKey(album.id),
-                                  title: title,
-                                  onRename: () => _renameAlbum(album.id, title),
-                                  onDelete: () => _deleteAlbum(album.id),
-                                  onReorderHandle: (child) =>
-                                      ReorderableDragStartListener(
-                                        index: i,
-                                        child: child,
-                                      ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 24),
-          Flexible(
-            flex: 7,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (isAlbumOpen)
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => setState(() {
-                          _selectedAlbumId = null;
-                          _selectedAlbumTitle = null;
-                        }),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _selectedAlbumTitle ?? '',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  )
-                // Ось це
-                else
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        // Заголовок ліворуч
-                        const Text(
-                          '',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Spacer(),
-                        // Кнопка Галерея там, де раніше була Камера
-                        TextButton.icon(
-                          icon: const Icon(Icons.photo_library),
-                          label: Text('gallery_label'.tr()),
-                          onPressed: () => _uploadPhoto(ImageSource.gallery),
-                        ),
-                      ],
-                    ),
-                  ),
 
-                const SizedBox(height: 8),
-                Expanded(
-                  child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                    stream: isAlbumOpen
-                        ? _db
-                              .collection('users')
-                              .doc(_userId)
-                              .collection('albums')
-                              .doc(_selectedAlbumId!)
-                              .collection('photos')
-                              .orderBy('createdAt', descending: true)
-                              .snapshots()
-                        : _db
-                              .collection('users')
-                              .doc(_userId)
-                              .collection('photos')
-                              .orderBy('createdAt', descending: true)
-                              .snapshots(),
-                    builder: (ctx, snap) {
-                      if (snap.connectionState == ConnectionState.waiting)
-                        return const Center(child: CircularProgressIndicator());
-                      if (snap.hasError)
-                        return Center(child: Text('Error: ${snap.error}'));
-                      final photos = snap.data!.docs;
-                      if (photos.isEmpty)
-                        return const Center(child: Text('Немає фото'));
-                      return GridView.builder(
-                        padding: const EdgeInsets.all(8),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
-                              crossAxisSpacing: 8,
-                              mainAxisSpacing: 8,
-                            ),
-                        itemCount: photos.length,
-                        itemBuilder: (ctx, i) {
-                          final doc = photos[i];
-                          final url = doc.data()['url'] as String?;
-                          if (url == null) return const SizedBox();
-                          if (!isAlbumOpen) {
-                            return AspectRatio(
-                              aspectRatio: 1,
-                              child: PhotoTile(
-                                photo: PhotoData(id: doc.id, url: url),
-                                onMove: (photo, destId) async {
-                                  if (_selectedAlbumId == null) {
-                                    // із галереї в альбом
-                                    await _movePhotoToAlbum(photo, destId);
-                                  } else {
-                                    // всередині альбому
-                                    if (destId == 'gallery') {
-                                      await _movePhotoToGallery(
-                                        photo,
-                                        _selectedAlbumId!,
-                                      );
-                                    } else {
-                                      await _movePhotoBetweenAlbums(
-                                        photo,
-                                        destId,
-                                      );
-                                    }
-                                  }
-                                },
-                                onDelete: () => _confirmDeletePhoto(doc.id),
-                                onComment: () =>
-                                    _showCommentsSheet(doc.id, null),
-                                fetchAlbums: _fetchAlbumList,
-                              ),
-                            );
-                          }
-                          return AspectRatio(
-                            aspectRatio: 1,
-                            child: PhotoTile(
-                              photo: PhotoData(id: doc.id, url: url),
-                              onMove: (photo, destId) async {
-                                if (_selectedAlbumId == null) {
-                                  // Ми в галереї → картинка йде в альбом
-                                  await _movePhotoToAlbum(photo, destId);
-                                } else {
-                                  // Ми в альбомі →
-                                  if (destId == 'gallery') {
-                                    // повернути у галерею
-                                    await _movePhotoToGallery(
-                                      photo,
-                                      _selectedAlbumId!,
-                                    );
-                                  } else {
-                                    // перемістити між альбомами
-                                    await _movePhotoBetweenAlbums(
-                                      photo,
-                                      destId,
-                                    );
-                                  }
-                                }
-                              },
-                              onDelete: () => _confirmDeletePhoto(doc.id),
-                              onComment: () => _showCommentsSheet(doc.id, null),
-                              fetchAlbums: _fetchAlbumList,
-                            ),
-                          );
-                        },
-                      );
-                    },
+    // 2. Ліва панель: заголовок + список альбомів
+    final albumListPanel = Flexible(
+      flex: 3,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Заголовок "My Albums" + кнопка додавання
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'my_albums'.tr(),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ],
+              ),
+              IconButton(icon: const Icon(Icons.add), onPressed: _addAlbum),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Список альбомів з можливістю перетягувати
+          Expanded(
+            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: _db
+                  .collection('users')
+                  .doc(_userId)
+                  .collection('albums')
+                  .orderBy('order')
+                  .snapshots(),
+              builder: (ctx, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snap.hasError) {
+                  return Center(child: Text('Error: ${snap.error}'));
+                }
+                final docs = snap.data!.docs;
+                if (docs.isEmpty) {
+                  return const Center(child: Text('Немає альбомів'));
+                }
+                return ReorderableListView.builder(
+                  itemCount: docs.length,
+                  // На мобільних можна довгим тапом по будь-якому місцю перетягувати,
+                  // а на десктопі — тільки через drag-хендл
+                  buildDefaultDragHandles: isMobile,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  onReorder: (oldIndex, newIndex) =>
+                      _reorderAlbums(oldIndex, newIndex, docs),
+                  itemBuilder: (ctx, i) {
+                    final album = docs[i];
+                    final rawTitle = album.data()['title'];
+                    final title = rawTitle is String
+                        ? rawTitle
+                        : (rawTitle[context.locale.languageCode] ??
+                                  rawTitle.values.first)
+                              as String;
+
+                    // DragTarget дозволяє скидати фото на альбом
+                    return DragTarget<PhotoData>(
+                      key: ValueKey(album.id),
+                      onWillAccept: (_) => true,
+                      onAccept: (photo) => _movePhotoToAlbum(photo, album.id),
+                      builder: (context, candidate, rejected) {
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedAlbumId = album.id;
+                              _selectedAlbumTitle = title;
+                            });
+                          },
+                          child: AlbumTile(
+                            key: ValueKey(album.id),
+                            title: title,
+                            onRename: () => _renameAlbum(album.id, title),
+                            onDelete: () => _deleteAlbum(album.id),
+                            onReorderHandle: (child) =>
+                                ReorderableDragStartListener(
+                                  index: i,
+                                  child: child,
+                                ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
             ),
           ),
         ],
       ),
+    );
+
+    // 3. Права панель: кнопка назад / додавання фото + сітка фото
+    final photosPanel = Flexible(
+      flex: 7,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Якщо альбом відкрито — показати кнопку назад і заголовок
+          if (isAlbumOpen)
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => setState(() {
+                    _selectedAlbumId = null;
+                    _selectedAlbumTitle = null;
+                  }),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _selectedAlbumTitle ?? '',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            )
+          // Інакше — кнопка завантаження з галереї
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: TextButton.icon(
+                icon: const Icon(Icons.photo_library),
+                label: Text('gallery_label'.tr()),
+                onPressed: () => _uploadPhoto(ImageSource.gallery),
+              ),
+            ),
+          const SizedBox(height: 8),
+          // Сама сітка фото
+          Expanded(
+            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: isAlbumOpen
+                  ? _db
+                        .collection('users')
+                        .doc(_userId)
+                        .collection('albums')
+                        .doc(_selectedAlbumId!)
+                        .collection('photos')
+                        .orderBy('createdAt', descending: true)
+                        .snapshots()
+                  : _db
+                        .collection('users')
+                        .doc(_userId)
+                        .collection('photos')
+                        .orderBy('createdAt', descending: true)
+                        .snapshots(),
+              builder: (ctx, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snap.hasError) {
+                  return Center(child: Text('Error: ${snap.error}'));
+                }
+                final photos = snap.data!.docs;
+                if (photos.isEmpty) {
+                  return const Center(child: Text('Немає фото'));
+                }
+                return GridView.builder(
+                  padding: const EdgeInsets.all(8),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount:
+                        gridCount, // <- Адаптивна кількість стовпців
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                  ),
+                  itemCount: photos.length,
+                  itemBuilder: (ctx, i) {
+                    final doc = photos[i];
+                    final url = doc.data()['url'] as String?;
+                    if (url == null) return const SizedBox();
+                    return AspectRatio(
+                      aspectRatio: 1,
+                      child: PhotoTile(
+                        photo: PhotoData(id: doc.id, url: url),
+                        onMove: (photo, destId) async {
+                          if (_selectedAlbumId == null) {
+                            await _movePhotoToAlbum(photo, destId);
+                          } else if (destId == 'gallery') {
+                            await _movePhotoToGallery(photo, _selectedAlbumId!);
+                          } else {
+                            await _movePhotoBetweenAlbums(photo, destId);
+                          }
+                        },
+                        onDelete: () => _confirmDeletePhoto(doc.id),
+                        onComment: () =>
+                            _showCommentsSheet(doc.id, _selectedAlbumId),
+                        fetchAlbums: _fetchAlbumList,
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // 4. Повертаємо або Row (для ширших екранів) або Column (мобільні)
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: isMobile
+          ? Column(
+              children: [
+                albumListPanel,
+                const SizedBox(height: 24),
+                photosPanel,
+              ],
+            )
+          : Row(
+              children: [
+                albumListPanel,
+                const SizedBox(width: 24),
+                photosPanel,
+              ],
+            ),
     );
   }
 

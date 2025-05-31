@@ -1,43 +1,41 @@
 // lib/auth_service.dart
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter/foundation.dart';
 
 class AuthService {
-  // Ваш FirebaseAuth
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth _auth;
+  final GoogleSignIn _googleSignIn;
 
-  // GoogleSignIn з явним clientId для web
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-  scopes: ['email', 'profile'],
-);
+  // Конструктор за замовчуванням (використовує реальні FirebaseAuth і GoogleSignIn)
+  AuthService()
+      : _auth = FirebaseAuth.instance,
+        _googleSignIn = GoogleSignIn();
 
+  // Named-конструктор для передачі мок-обʼєктів
+  AuthService.withMocks({
+    required FirebaseAuth auth,
+    required GoogleSignIn googleSignIn,
+  })  : _auth = auth,
+        _googleSignIn = googleSignIn;
 
+  /// Метод входу через Google. У реальному застосунку тут ви беретe токени і викликаєте _auth.signInWithCredential(...)
   Future<User?> signInWithGoogle() async {
-    try {
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null;
+    final googleUser = await _googleSignIn.signIn();
+    if (googleUser == null) return null;
 
-      final googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCred = await _auth.signInWithCredential(credential);
-      return userCred.user;
-    } on FirebaseAuthException catch (e, stack) {
-      debugPrint('FirebaseAuthException: $e\n$stack');
-      rethrow;
-    } catch (e, stack) {
-      debugPrint('Unexpected error: $e\n$stack');
-      rethrow;
-    }
+    final googleAuth = await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      idToken: googleAuth.idToken,
+      accessToken: googleAuth.accessToken,
+    );
+    final userCred = await _auth.signInWithCredential(credential);
+    return userCred.user;
   }
 
-  /// Вихід
+  /// Метод виходу
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
     await _auth.signOut();
+    await _googleSignIn.signOut();
   }
 }

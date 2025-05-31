@@ -1,10 +1,20 @@
+// lib/user_profile_page.dart
+
+import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:easy_localization/easy_localization.dart';
+
 import 'storage_service.dart';
 import 'auth_service.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'theme_notifier.dart';
 
 class UserProfilePage extends StatefulWidget {
   final User user;
@@ -15,118 +25,197 @@ class UserProfilePage extends StatefulWidget {
 }
 
 class _UserProfilePageState extends State<UserProfilePage> {
-  final _storageService = StorageService();
+  final StorageService _storageService = StorageService();
   Uint8List? _imageBytes;
 
+  @override
+  void initState() {
+    super.initState();
+    // Автоматично пробуємо синхронізувати “чергу” при відкритті сторінки
+    _syncPendingPhotos();
+  }
+
+  /// Якщо є інтернет — відразу завантажуємо фото в Firebase,
+  /// якщо ні — відкладаємо шлях у Hive
   Future<void> _pickAndUploadImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked == null) return;
-    final bytes = await picked.readAsBytes();
-    final url = await _storageService.uploadImage(bytes, widget.user.uid);
-    await FirebaseAuth.instance.currentUser!.updatePhotoURL(url);
-    await FirebaseAuth.instance.currentUser!.reload();
-    setState(() => _imageBytes = bytes);
+
+    final filePath = picked.path;
+    final box = Hive.box<String>('pendingPhotos');
+
+    try {
+      // 1) Завантаження байтів у Storage
+      final bytes = await picked.readAsBytes();
+      final url = await _storageService.uploadImage(bytes, widget.user.uid);
+
+      // 2) Запис у Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.user.uid)
+          .collection('photos')
+          .add({
+        'url': url,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('photo_uploaded'.tr())),
+      );
+      setState(() => _imageBytes = bytes);
+    } catch (e) {
+      // Якщо offline або інша помилка — відкладаємо в Hive
+      await box.add(filePath);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('offline_photo_queued'.tr())),
+      );
+    }
   }
 
- @override
-Widget build(BuildContext context) {
-  final photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
-  final avatar = _imageBytes != null
-      ? ClipOval(child: Image.memory(_imageBytes!, width: 100, height: 100, fit: BoxFit.cover))
-      : (photoUrl != null
-          ? CircleAvatar(
-              backgroundImage: NetworkImage(photoUrl),
-              radius: 50,
-            )
-          : const Icon(Icons.account_circle, size: 100));
+  /// Синхронізуємо всі шляхи з Hive → Firebase (якщо інтернет з’явився)
+  Future<void> _syncPendingPhotos() async {
+    final box = Hive.box<String>('pendingPhotos');
+    final keys = box.keys.cast<int>().toList();
 
-  return SingleChildScrollView(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const SizedBox(height: 20),
+    for (final key in keys) {
+      final localPath = box.get(key);
+      if (localPath == null) continue;
 
-        // 🖼 Аватар
-        avatar,
+      try {
+        final bytes = await File(localPath).readAsBytes();
+        final url = await _storageService.uploadImage(bytes, widget.user.uid);
 
-        const SizedBox(height: 12),
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.user.uid)
+            .collection('photos')
+            .add({
+          'url': url,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
 
-        // 📸 Кнопка "Змінити фото" одразу під фото
-        ElevatedButton(
-          onPressed: _pickAndUploadImage,
-          child: Text('change_photo'.tr()),
-        ),
+        // Після успіху видаляємо з Hive
+        await box.delete(key);
+      } catch (e) {
+        // Якщо досі offline — лишаємо елемент у черзі
+        continue;
+      }
+    }
+  }
 
-        const SizedBox(height: 20),
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeNotifier>().mode == ThemeMode.dark;
 
-        // ✉️ Email у 2 рядки
-        Column(
-          children: [
-            Text(
-              'email_label'.tr(),
-              style: const TextStyle(fontSize: 16),
+    final photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
+    final avatar = _imageBytes != null
+        ? ClipOval(
+            child: Image.memory(
+              _imageBytes!,
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
             ),
-            const SizedBox(height: 4),
-            Text(
-              widget.user.email ?? tr('not_specified'),
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
+          )
+        : (photoUrl != null
+            ? CircleAvatar(
+                backgroundImage: NetworkImage(photoUrl),
+                radius: 50,
+              )
+            : const Icon(Icons.account_circle, size: 100));
 
-        const SizedBox(height: 30),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 20),
+          // 🖼 Аватар
+          avatar,
+          const SizedBox(height: 12),
 
-        // 🌐 Вибір мови — без сірої заливки
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${'language'.tr()}: '),
-            Theme(
-              data: Theme.of(context).copyWith(
-                canvasColor: Colors.white,
+          // 📸 Кнопка "Змінити фото"
+          ElevatedButton(
+            onPressed: _pickAndUploadImage,
+            child: Text('change_photo'.tr()),
+          ),
+
+          const SizedBox(height: 20),
+          // ✉️ Показуємо email
+          Column(
+            children: [
+              Text('email_label'.tr(),
+                  style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 4),
+              Text(
+                widget.user.email ?? tr('not_specified'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              child: DropdownButton<Locale>(
-                value: context.locale,
-                underline: const SizedBox(),
-                dropdownColor: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                style: Theme.of(context).textTheme.bodyMedium,
-                isDense: true,
-                items: [
-                  DropdownMenuItem(
-                    value: const Locale('uk'),
-                    child: Text('ukrainian'.tr()),
-                  ),
-                  DropdownMenuItem(
-                    value: const Locale('en'),
-                    child: Text('english'.tr()),
-                  ),
-                ],
-                onChanged: (locale) {
-                  if (locale != null) {
-                    context.setLocale(locale);
-                  }
-                },
-              ),
+            ],
+          ),
+
+          const SizedBox(height: 30),
+          // 🌐 Dropdown вибору мови
+          Center(
+            child: DropdownButton<Locale>(
+              value: context.locale,
+              underline: const SizedBox(),
+              style: Theme.of(context).textTheme.titleMedium,
+              items: [
+                DropdownMenuItem(
+                  value: const Locale('uk'),
+                  child: Text('ukrainian'.tr()),
+                ),
+                DropdownMenuItem(
+                  value: const Locale('en'),
+                  child: Text('english'.tr()),
+                ),
+              ],
+              onChanged: (locale) {
+                if (locale != null) context.setLocale(locale);
+              },
             ),
-          ],
-        ),
+          ),
 
-        const SizedBox(height: 30),
+          const SizedBox(height: 30),
+          // ⛅ Тема: показуємо лише “ніч” або “день”
+          Center(
+            child: Text(
+              isDark ? 'theme_night'.tr() : 'theme_day'.tr(),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // 🔀 Перемикач теми
+          Center(
+            child: Switch(
+              value: isDark,
+              onChanged: (val) =>
+                  context.read<ThemeNotifier>().toggleTheme(val),
+            ),
+          ),
 
-        // 🚪 Logout
-        ElevatedButton.icon(
-          icon: const Icon(Icons.logout),
-          label: Text('logout'.tr()),
-          onPressed: () async {
-            await AuthService().signOut();
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-        ),
-      ],
-    ),
-  );
-}
+          const SizedBox(height: 40),
+          // ❇️ (опціонально) Кнопка ручної синхронізації
+          ElevatedButton(
+            onPressed: _syncPendingPhotos,
+            child: Text('sync_offline_photos'.tr()),
+          ),
 
+          const SizedBox(height: 20),
+          // 🚪 Кнопка Logout (в самому низу)
+          ElevatedButton.icon(
+            icon: const Icon(Icons.logout),
+            label: Text('logout'.tr()),
+            onPressed: () async {
+              await AuthService().signOut();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
